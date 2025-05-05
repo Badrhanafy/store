@@ -8,5 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasFactory;
-    protected $fillable=['title','price','qte'];
+
+    protected $fillable = ['title', 'description', 'price', 'qte', 'image'];
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

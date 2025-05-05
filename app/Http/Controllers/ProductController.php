@@ -6,18 +6,43 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 class ProductController extends Controller
 {
-    public function postsListe(){
+    public function index() {
         return Product::all();
     }
-    public function store( Request $req){
-           $validated = $req->validate([
-             'title'=>'required|min:8|max:50',
-             'qte'=>'required|integer',
-             
-             'price'=>'required|integer',
-           ]);
-           //dd($validated);
-           $product = Product::create($validated);
-           return response()->json($product,200);
+
+    public function store(Request $request) {
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'qte' => 'required|integer',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+    
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            $imageName = time().'.'.$request->image->extension();  
+            $request->image->move(public_path('images'), $imageName);
+            $validated['image'] = 'images/' . $imageName; // Save relative path
+        }
+    
+        // Create product
+        $product = Product::create($validated);
+    
+        return response()->json($product, 201);
+    }
+
+    public function show(Product $product) {
+        return $product;
+    }
+
+    public function update(Request $request, Product $product) {
+        $product->update($request->all());
+        return $product;
+    }
+
+    public function destroy(Product $product) {
+        $product->delete();
+        return response()->noContent();
     }
 }
