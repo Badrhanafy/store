@@ -1,0 +1,21 @@
+# Laravel
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+.env
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# React (frontend)
+client/node_modules
+client/.env
+client/build
+client/dist
+
+# IDEs
+.idea
+.vscode
