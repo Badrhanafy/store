@@ -21,6 +21,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Route::get("/AllProducts",[ProductController::class,"postsListe"]);
 // Products
 Route::apiResource('products', App\Http\Controllers\ProductController::class);
+Route::post('/orders/from-cart', [OrderController::class, 'storeCartOrder']);
+Route::post('/admin/products/{product}/add-images', [ProductController::class, 'addImages']);
+Route::get('/products/{id}/images', [ProductController::class, 'getImages']);
 
 // Orders
 Route::apiResource('orders', App\Http\Controllers\OrderController::class);

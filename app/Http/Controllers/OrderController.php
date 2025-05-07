@@ -1,27 +1,91 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Order\OrderItem;
+use App\Models\OrderItem;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Payment;
+use Illuminate\Http\Request;
+
 class OrderController extends Controller
 {
     public function index() {
         return Order::with(['orderItems.product', 'payment'])->get();
     }
 
-    public function store(Request $request) {
-        $order = Order::create($request->only(['user_id', 'name', 'phone', 'address', 'status', 'total_price']));
+    public function store(Request $request)
+{
+    $order = Order::create([
+        'user_id' => null, // بلا حساب
+        'customer_name' =>  $request->customer_name||'Guest User',
+        'phone' => $request->phone,
+        'address' => $request->address,
+        'status' => 'pending',
+        'total_price' => 0, // غادي نحسبوه من بعد
+    ]);
 
-        foreach ($request->order_items as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-            ]);
-        }
+    $product = Product::findOrFail($request->product_id);
 
-        return $order->load('orderItems');
+    $orderItem = OrderItem::create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'quantity' => $request->quantity,
+        'price' => $product->price,
+        'taille' => $request->taille,
+    ]);
+
+    // نحسب المجموع
+    $order->total_price = $product->price * $request->quantity;
+    $order->save();
+
+    // Payment record
+    Payment::create([
+        'order_id' => $order->id,
+        'payment_method' => $request->payment_method,
+        'payment_status' => 'pending',
+    ]);
+
+    return response()->json(['message' => 'Order created successfully!']);
+}
+public function storeCartOrder(Request $request)
+{
+    $order = Order::create([
+        'user_id' => null, 
+        'customer_name' => $request->customer_name || 'Guest User',
+        'phone' => $request->phone,
+        'address' => $request->address,
+        'status' => 'pending',
+        'total_price' => 0,
+    ]);
+
+    $totalPrice = 0;
+
+    foreach ($request->products as $item) {
+        $product = Product::findOrFail($item['id']);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'quantity' => $item['quantity'],
+            'price' => $product->price,
+            'taille' => $item['taille'] ?? null,
+        ]);
+
+        $totalPrice += $product->price * $item['quantity'];
     }
+
+    $order->total_price = $totalPrice;
+    $order->save();
+
+    Payment::create([
+        'order_id' => $order->id,
+        'payment_method' => $request->payment_method,
+        'payment_status' => 'pending',
+    ]);
+
+    return response()->json(['message' => 'Order from cart created successfully!']);
+}
+
 
     public function show(Order $order) {
         return $order->load(['orderItems.product', 'payment']);
@@ -36,5 +100,6 @@ class OrderController extends Controller
         $order->delete();
         return response()->noContent();
     }
+
 }
 
