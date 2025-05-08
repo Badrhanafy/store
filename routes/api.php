@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ImpressionController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -25,6 +26,8 @@ Route::post('/orders/from-cart', [OrderController::class, 'storeCartOrder']);
 Route::post('/admin/products/{product}/add-images', [ProductController::class, 'addImages']);
 Route::get('/products/{id}/images', [ProductController::class, 'getImages']);
 
+// reviews 
+Route::post('/submitImpression', [ImpressionController::class, 'saveImpression']);
 // Orders
 Route::apiResource('orders', App\Http\Controllers\OrderController::class);
 

@@ -16,12 +16,12 @@ class OrderController extends Controller
     public function store(Request $request)
 {
     $order = Order::create([
-        'user_id' => null, // بلا حساب
-        'customer_name' =>  $request->customer_name||'Guest User',
+        'user_id' => null, 
+        'customer_name' =>  $request->customer_name,
         'phone' => $request->phone,
         'address' => $request->address,
         'status' => 'pending',
-        'total_price' => 0, // غادي نحسبوه من بعد
+        'total_price' => 0, 
     ]);
 
     $product = Product::findOrFail($request->product_id);
@@ -51,7 +51,7 @@ public function storeCartOrder(Request $request)
 {
     $order = Order::create([
         'user_id' => null, 
-        'customer_name' => $request->customer_name || 'Guest User',
+        'customer_name' => 'Guest User',
         'phone' => $request->phone,
         'address' => $request->address,
         'status' => 'pending',
