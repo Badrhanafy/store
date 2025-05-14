@@ -56,6 +56,8 @@ public function getImages($id)
             'description' => 'required|string',
             'price' => 'required|numeric',
             'qte' => 'required|integer',
+            'category' => 'required',
+            'sizes' => 'required',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
     
@@ -85,4 +87,51 @@ public function getImages($id)
         $product->delete();
         return response()->noContent();
     }
+    public function GetImpressions($id){
+        $product = Product::find($id);
+        $impressions= $product->Impressions()->get();
+        return $impressions;
+    }
+
+    ///////////////// delete image
+
+  public function deleteImage(Request $request, $productId, $imageId)
+{
+    try {
+        // Validate the product exists
+        $product = Product::findOrFail($productId);
+        
+        // Find the image (assuming you have a ProductImage model)
+        $image = ProductImage::where('product_id', $productId)
+                            ->where('id', $imageId)
+                            ->firstOrFail();
+        
+        // Get the full image path
+        $imagePath = public_path($image->image_path);
+        
+        // Delete the file from storage
+        if (file_exists($imagePath)) {
+            unlink($imagePath);
+        }
+        
+        // Delete the record from database
+        $image->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully'
+        ]);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Image or product not found'
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error deleting image: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

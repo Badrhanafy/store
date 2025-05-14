@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->integer('qte')->default(0);
             $table->string('image')->nullable();
+            $table->string('category');
             $table->enum('size', ['S', 'M', 'L', 'XL'])->nullable();
             $table->timestamps();
         });

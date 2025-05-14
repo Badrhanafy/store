@@ -22,6 +22,8 @@ class OrderController extends Controller
         'address' => $request->address,
         'status' => 'pending',
         'total_price' => 0, 
+        'size' => $request->size,
+        'category' =>$request->category,
     ]);
 
     $product = Product::findOrFail($request->product_id);
@@ -100,6 +102,41 @@ public function storeCartOrder(Request $request)
         $order->delete();
         return response()->noContent();
     }
+
+
+
+
+
+
+
+
+
+    /////////////////// plusieur items dans une commande
+
+    // كنشأ order جديد
+public function PanierOrder(Request $request){
+    $order = Order::create([
+    'user_id' => $request->user_id,
+    'customer_name' => $request->customer_name,
+    'phone' => $request->phone,
+    'email' => $request->email,
+    'address' => $request->address,
+    'status' => 'pending',
+    'total_price' => $request->total_price,
+]);
+foreach ($request->items as $item) {
+    OrderItem::create([
+        'order_id' => $order->id,
+        'product_id' => $item['product_id'],
+        'quantity' => $item['quantity'],
+        'price' => $item['price'],
+    ]);
+}
+return response()->json(['message' => 'Order placed successfully']);
+
+
+}
+
 
 }
 
