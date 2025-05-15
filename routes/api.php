@@ -6,6 +6,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImpressionController;
 use App\Http\Controllers\OrderController;
+
+use App\Http\Controllers\Auth\SocialAuthController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -46,3 +48,29 @@ Route::middleware(['auth', 'AdminMiddleware'])->get('/api/orders', [OrderControl
 Route::post('/admin/login', [AuthController::class, 'login']);
 /// multi-items order
 Route::post('/orders/panier', [OrderController::class, 'PanierOrder']);
+
+
+
+/////////////auth
+
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+// Google OAuth
+Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
+Route::post('/auth/google', [SocialAuthController::class, 'handleGoogleToken']);
+
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+});
+Route::post('/auth/google', [SocialAuthController::class, 'handleGoogleToken']);
+
+// routes/web.php
+Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
