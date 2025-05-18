@@ -50,29 +50,37 @@ public function getImages($id)
 }   
 
 
-    public function store(Request $request) {
-        $validated = $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'qte' => 'required|integer',
-            'category' => 'required',
-            'sizes' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-    
-        // Handle Image Upload
-        if ($request->hasFile('image')) {
-            $imageName = time().'.'.$request->image->extension();  
-            $request->image->move(public_path('images'), $imageName);
-            $validated['image'] = 'images/' . $imageName; // Save relative path
-        }
-    
-        // Create product
-        $product = Product::create($validated);
-    
-        return response()->json($product, 201);
+public function store(Request $request) {
+    $validated = $request->validate([
+        'title' => 'required|string',
+        'description' => 'required|string',
+        'price' => 'required|numeric',
+        'qte' => 'required|integer',
+        'category' => 'required|string',
+        'sizes' => 'required|string', // Changed from array to string
+        'colors' => 'required|string', // Changed from array to string
+        'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
+
+    // Handle Image Upload
+    if ($request->hasFile('image')) {
+        $imageName = time().'.'.$request->image->extension();  
+        $request->image->move(public_path('images'), $imageName);
+        $validated['image'] = 'images/' . $imageName;
     }
+
+    // Decode the JSON strings back to arrays
+    $validated['sizes'] = json_decode($validated['sizes'], true);
+    $validated['colors'] = json_decode($validated['colors'], true);
+
+    // Create product
+    $product = Product::create($validated);
+
+    return response()->json([
+        'message' => 'Product created successfully',
+        'product' => $product
+    ], 201);
+}
 
     public function show(Product $product) {
         return $product;

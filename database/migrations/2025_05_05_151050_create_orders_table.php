@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->text('notes')->nullable();
             $table->string('address');
-            $table->enum('status', ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'shipped', 'delivered', 'cancelled'])->default('pending');
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
         });

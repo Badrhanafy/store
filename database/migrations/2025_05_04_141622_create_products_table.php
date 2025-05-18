@@ -13,17 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->integer('qte')->default(0);
-            $table->string('image')->nullable();
-            $table->string('category');
-            $table->enum('size', ['S', 'M', 'L', 'XL'])->nullable();
-            $table->timestamps();
-        });
+       Schema::create('products', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('description');
+    $table->decimal('price', 8, 2);
+    $table->integer('qte');
+    $table->string('category');
+    $table->json('sizes'); // Store as JSON
+    $table->json('colors'); // Store as JSON
+    $table->string('image');
+    $table->timestamps();
+});
     }
 
     /**
