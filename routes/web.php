@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/reset-password/{token}', function ($token) {
+    $email = request('email');
+    return redirect()->away("http://localhost:3000/reset-password?token=$token&email=$email");
+})->name('password.reset');
+

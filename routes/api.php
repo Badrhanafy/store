@@ -6,6 +6,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImpressionController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Auth\PasswordResetController;
+
 
 use App\Http\Controllers\Auth\SocialAuthController;
 /*
@@ -32,6 +34,9 @@ Route::get('/products/{id}/images', [ProductController::class, 'getImages']);
 Route::get("/product/{id}/impressions",[ProductController::class,"GetImpressions"]);
 Route::delete('/products/{product}/images/{image}', [ProductController::class, 'deleteImage']);
 
+//Auth Part
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 // reviews 
 Route::post('/submitImpression', [ImpressionController::class, 'saveImpression']);
 // Orders
@@ -56,7 +61,9 @@ Route::post('/orders/panier', [OrderController::class, 'PanierOrder']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+          
 // Google OAuth
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);

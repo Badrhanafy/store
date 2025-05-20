@@ -6,86 +6,78 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 class OrderController extends Controller
 {
     public function index() {
         return Order::with(['orderItems.product', 'payment'])->get();
     }
 
-    public function store(Request $request)
+public function store(Request $request)
 {
-    $order = Order::create([
-        'user_id' => null, 
-        'customer_name' =>  $request->customer_name,
-        'phone' => $request->phone,
-        'address' => $request->address,
-        'status' => 'pending',
-        'total_price' => 0, 
-        'size' => $request->size,
-        'category' =>$request->category,
+    $validatedData = $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'phone' => 'required|string|max:20',
+        'address' => 'required|string',
+        'product_id' => 'required|exists:products,id',
+        'quantity' => 'required|integer|min:1',
+        'size' => 'required|string',
+        'color' => 'nullable|string',
+        'payment_method' => 'required|string|in:cash,online',
     ]);
 
-    $product = Product::findOrFail($request->product_id);
+    $product = Product::findOrFail($validatedData['product_id']);
 
+    // Validate size and color against product options
+    if (!in_array($validatedData['size'], $product->sizes)) {
+        return response()->json([
+            'message' => 'Invalid size selected for this product'
+            
+        ], 422);
+    }
+
+    if ($validatedData['color'] && !in_array($validatedData['color'], $product->colors)) {
+        return response()->json([
+            'message' => 'Invalid color selected for this product',
+            'available_colors' => $product->colors
+        ], 422);
+    }
+
+    // Calculate total price
+    $totalPrice = $product->price * $validatedData['quantity'];
+
+    $order = Order::create([
+        'user_id' => auth()->id(), // Store user ID if authenticated
+        'customer_name' => $validatedData['customer_name'],
+        'phone' => $validatedData['phone'],
+        'address' => $validatedData['address'],
+        'status' => 'pending',
+        'total_price' => $totalPrice,
+    ]);
+      $product->qte = $product->qte - $validatedData['quantity'];
+      $product->save();
     $orderItem = OrderItem::create([
         'order_id' => $order->id,
         'product_id' => $product->id,
-        'quantity' => $request->quantity,
+        'quantity' => $validatedData['quantity'],
         'price' => $product->price,
-        'taille' => $request->taille,
+        'size' => $validatedData['size'],
+        'color' => $validatedData['color'] ?? null,
     ]);
-
-    // نحسب المجموع
-    $order->total_price = $product->price * $request->quantity;
-    $order->save();
-
-    // Payment record
-    Payment::create([
-        'order_id' => $order->id,
-        'payment_method' => $request->payment_method,
-        'payment_status' => 'pending',
-    ]);
-
-    return response()->json(['message' => 'Order created successfully!']);
-}
-public function storeCartOrder(Request $request)
-{
-    $order = Order::create([
-        'user_id' => null, 
-        'customer_name' => 'Guest User',
-        'phone' => $request->phone,
-        'address' => $request->address,
-        'status' => 'pending',
-        'total_price' => 0,
-    ]);
-
-    $totalPrice = 0;
-
-    foreach ($request->products as $item) {
-        $product = Product::findOrFail($item['id']);
-
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => $item['quantity'],
-            'price' => $product->price,
-            'taille' => $item['taille'] ?? null,
-        ]);
-
-        $totalPrice += $product->price * $item['quantity'];
-    }
-
-    $order->total_price = $totalPrice;
-    $order->save();
 
     Payment::create([
         'order_id' => $order->id,
-        'payment_method' => $request->payment_method,
-        'payment_status' => 'pending',
+        'payment_method' => $validatedData['payment_method'],
+        'payment_status' => $validatedData['payment_method'] === 'online' ? 'processing' : 'pending',
     ]);
 
-    return response()->json(['message' => 'Order from cart created successfully!']);
+    // Load relationships for the response
+    $order->load(['orderItems.product', 'payment']);
+
+    return response()->json([
+        'message' => 'Order created successfully!',
+        'order' => $order
+    ], 201);
 }
 
 
@@ -114,29 +106,72 @@ public function storeCartOrder(Request $request)
     /////////////////// plusieur items dans une commande
 
     // كنشأ order جديد
-public function PanierOrder(Request $request){
-    $order = Order::create([
-    'user_id' => $request->user_id,
-    'customer_name' => $request->customer_name,
-    'phone' => $request->phone,
-    'email' => $request->email,
-    'address' => $request->address,
-    'status' => 'pending',
-    'total_price' => $request->total_price,
-]);
-foreach ($request->items as $item) {
-    OrderItem::create([
-        'order_id' => $order->id,
-        'product_id' => $item['product_id'],
-        'quantity' => $item['quantity'],
-        'price' => $item['price'],
+public function PanierOrder(Request $request)
+{
+    // Validate the request data
+    $validatedData = $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'phone' => 'required|string|max:20',
+        'email' => 'required|email|max:255',
+        'address' => 'required|string',
+        'total_price' => 'required|numeric|min:0',
+        'items' => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1',
+        'items.*.price' => 'required|numeric|min:0',
+        'items.*.size' => 'required|string',
+        'items.*.color' => 'required|string',
     ]);
+
+    try {
+        // Start database transaction
+        DB::beginTransaction();
+
+        // Create the order
+        $order = Order::create([
+            'user_id' => $request->user_id ?? null, // Use null if user_id not provided
+            'customer_name' => $validatedData['customer_name'],
+            'phone' => $validatedData['phone'],
+            'email' => $validatedData['email'],
+            'address' => $validatedData['address'],
+            'status' => 'pending',
+            'total_price' => $validatedData['total_price'],
+        ]);
+
+        // Create order items
+        foreach ($validatedData['items'] as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item['product_id'],
+                'size' => $item['size'],
+                'color' => $item['color'], // Fixed from $item->size to $item['color']
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+
+            // Optional: Update product stock if you have inventory management
+            // Product::where('id', $item['product_id'])->decrement('qte', $item['quantity']);
+        }
+
+        // Commit transaction
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Order placed successfully',
+            'order_id' => $order->id,
+            'total' => $order->total_price
+        ], 201);
+
+    } catch (\Exception $e) {
+        // Rollback transaction on error
+        DB::rollBack();
+        
+        return response()->json([
+            'message' => 'Failed to place order',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
-return response()->json(['message' => 'Order placed successfully']);
-
-
-}
-
 
 }
 
