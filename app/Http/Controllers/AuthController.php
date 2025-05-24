@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -29,6 +30,15 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+        // After creating a new user:
+        Notification::create([
+            'type' => 'new_client',
+            'message' => 'New client registered: ' . $user->email,
+            'data' => [
+                'client_id' => $user->id,
+                'email' => $user->email
+            ]
         ]);
 
         return response()->json([

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImpressionController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 
 
@@ -81,3 +82,11 @@ Route::post('/auth/google', [SocialAuthController::class, 'handleGoogleToken']);
 // routes/web.php
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
+
+
+/////// Notifications 
+Route::prefix('admin')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+});
