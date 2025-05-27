@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Http\Request;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -20,4 +21,21 @@ Route::get('/reset-password/{token}', function ($token) {
     $email = request('email');
     return redirect()->away("http://localhost:3000/reset-password?token=$token&email=$email");
 })->name('password.reset');
+////////////////// auuuuuuuth googlr
+Route::get('/auth/google/redirect', function () {
+    return Socialite::driver('google')->redirect();
+});
 
+Route::get('/auth/google/callback', function (Request $request) {
+    $googleUser = Socialite::driver('google')->user();
+
+    $user = \App\Models\User::firstOrCreate(
+        ['email' => $googleUser->getEmail()],
+        ['name' => $googleUser->getName()]
+    );
+
+    $token = $user->createToken('google-token')->plainTextToken;
+
+    // redirect back to frontend with token
+    return redirect("http://localhost:3000/google/callback?token=$token");
+});

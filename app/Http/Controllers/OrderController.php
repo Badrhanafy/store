@@ -6,6 +6,9 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Models\User;
+
+
 use Illuminate\Support\Facades\DB;
 class OrderController extends Controller
 {
@@ -70,10 +73,10 @@ public function store(Request $request)
         'payment_method' => $validatedData['payment_method'],
         'payment_status' => $validatedData['payment_method'] === 'online' ? 'processing' : 'pending',
     ]);
-
+    
     // Load relationships for the response
     $order->load(['orderItems.product', 'payment']);
-
+   
     return response()->json([
         'message' => 'Order created successfully!',
         'order' => $order

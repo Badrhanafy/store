@@ -8,7 +8,7 @@ use App\Http\Controllers\ImpressionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
-
+use Laravel\Socialite\Facades\Socialite;
 
 use App\Http\Controllers\Auth\SocialAuthController;
 /*
@@ -65,10 +65,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
           
-// Google OAuth
-Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
-Route::post('/auth/google', [SocialAuthController::class, 'handleGoogleToken']);
+
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -77,16 +74,36 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 });
-Route::post('/auth/google', [SocialAuthController::class, 'handleGoogleToken']);
-
-// routes/web.php
-Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 
 
-/////// Notifications 
-Route::prefix('admin')->group(function () {
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+////////// Notifications part
+
+    // Notifications routes
+    Route::middleware('auth:sanctum')->get('/admin/notifications', [NotificationController::class, 'index']);
+    Route::middleware('auth:sanctum')->post('/admin/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::middleware('auth:sanctum')->patch('/admin/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+
+
+///////// google auth inchaallah
+
+// Redirect to Google
+Route::get('/auth/google', function () {
+    return Socialite::driver('google')->stateless()->redirect();
+});
+// Callback from Google
+Route::get('/auth/google/callback', function (Request $request) {
+    //dd($request);
+    $googleUser = Socialite::driver('google')->stateless()->user();
+
+    // Check user in DB or create
+    $user = \App\Models\User::firstOrCreate(
+        ['email' => $googleUser->getEmail()],
+        ['name' => $googleUser->getName()]
+    );
+
+    // Generate token or session (JWT or sanctum)
+    
+    $token = $user->createToken('google-token')->plainTextToken;
+
+    return redirect("http://localhost:3000/google/callback?token=$token");
 });

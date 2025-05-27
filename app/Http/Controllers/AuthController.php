@@ -12,42 +12,41 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Mail\ForgetPassword;
 use Illuminate\Support\Facades\Mail;
-
+use App\Notifications\NewUserNotification;
 class AuthController extends Controller
 {
     /**
      * Register a new user
      */
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8',
+        'role' => 'sometimes|string|min:3'
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-        // After creating a new user:
-        Notification::create([
-            'type' => 'new_client',
-            'message' => 'New client registered: ' . $user->email,
-            'data' => [
-                'client_id' => $user->id,
-                'email' => $user->email
-            ]
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => $request->role ?? 'user',
+    ]);
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'token' => $user->createToken('auth_token')->plainTextToken
-        ], 201);
+    // Notify all admins about the new registration
+    $admins = User::where('role', 'admin')->get();
+    
+    foreach ($admins as $admin) {
+        $admin->notify(new NewUserNotification($user));
     }
 
+    return response()->json([
+        'message' => 'User registered successfully',
+        'user' => $user,
+        'token' => $user->createToken('auth_token')->plainTextToken
+    ], 201);
+}
     /**
      * Login user and create token
      */
@@ -56,7 +55,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'device_name' => 'required',
+            /* 'device_name' => 'required', */
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -70,8 +69,9 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'user' => $user,
-            'token' => $user->createToken($request->device_name)->plainTextToken
+            'token' => $user->createToken("request->device_name")->plainTextToken
         ]);
+        /* just for commit */
     }
 
     /**
