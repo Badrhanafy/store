@@ -24,14 +24,16 @@ public function register(Request $request)
         'name' => 'required|string|max:255',
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8',
-        'role' => 'sometimes|string|min:3'
+        'role' => 'sometimes|string|min:3',
+        'phone'=> 'min:10'
     ]);
-
+    
     $user = User::create([
         'name' => $request->name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
         'role' => $request->role ?? 'user',
+        'phone'=>$request->phone
     ]);
 
     // Notify all admins about the new registration

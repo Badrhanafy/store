@@ -175,6 +175,65 @@ public function PanierOrder(Request $request)
         ], 500);
     }
 }
+/////////////////// logged in user's hstory 
 
+public function getUserOrders(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'phone' => 'required|string'
+        ]);
+
+        // Get the phone number from the request
+        $phone = $request->query('phone');
+
+        // Fetch orders with their related data
+        $orders = Order::with(['order_items.product', 'payment'])
+            ->where('phone', $phone)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Return the orders as JSON
+        return response()->json($orders);
+    }
+    public function cancel(Request $request, Order $order)
+    {
+        // Check if the order belongs to the authenticated user (unless admin)
+        if ($order->user_id !== $request->user()->id /* && !$request->user()->is_admin */) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to cancel this order.',
+            ], 403);
+        }
+
+        // Check if the order can be cancelled (only pending/processing)
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order cannot be cancelled at this stage.',
+            ], 400);
+        }
+
+        // Update order status
+        $order->update([
+            'status' => 'cancelled',
+            /* 'cancelled_at' => now(),
+            'cancelled_by' => $request->user()->id, */
+        ]);
+
+        // (Optional) Restore product stock
+        if ($order->items()->exists()) {
+            foreach ($order->items as $item) {
+                $item->product()->increment('stock', $item->quantity);
+            }
+        }
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order cancelled successfully.',
+            'order' => $order->fresh(), // Return refreshed order data
+        ]);
+    }
 }
 

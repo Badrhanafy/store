@@ -107,3 +107,9 @@ Route::get('/auth/google/callback', function (Request $request) {
 
     return redirect("http://localhost:3000/google/callback?token=$token");
 });
+
+
+////////// logged in user orders history
+Route::get('/ordersHistory/userPhone', [OrderController::class, 'getUserOrders'])->middleware('auth:sanctum');
+Route::get('/ordersHistory/userPhone', [OrderController::class, 'getUserOrders'])->middleware('auth:sanctum');
+Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware('auth:sanctum');
