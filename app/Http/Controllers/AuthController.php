@@ -158,4 +158,8 @@ public function validateToken(Request $request)
     {
         return response()->json($request->user());
     }
+    ////////////// user profile update function
+    public function profileUpdate(Request $request){
+        
+    }
 }

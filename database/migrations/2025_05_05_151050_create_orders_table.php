@@ -24,8 +24,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'completed', 'shipped', 'delivered', 'cancelled'])->default('pending');
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
-            $table->date("cancelled_at");
-            $table->integer("cancelled_by");
+            $table->date("cancelled_at")->nullable();
+            $table->integer("cancelled_by")->nullable();
         });
     
     }

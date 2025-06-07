@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImpressionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Carousel;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -112,4 +113,9 @@ Route::get('/auth/google/callback', function (Request $request) {
 ////////// logged in user orders history
 Route::get('/ordersHistory/userPhone', [OrderController::class, 'getUserOrders'])->middleware('auth:sanctum');
 Route::get('/ordersHistory/userPhone', [OrderController::class, 'getUserOrders'])->middleware('auth:sanctum');
-Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware('auth:sanctum');
+Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])/* ->middleware('auth:sanctum') */;
+Route::patch("/account/Update/{userId}",[AuthController::class,'profileUpdate']);
+
+//// sliders
+Route::get('/slides',[Carousel::class,'index']);
+Route::post('/slides',[Carousel::class,'store']);
