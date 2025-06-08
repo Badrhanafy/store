@@ -13,6 +13,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
+/* just for commits ! */
 /*
 |--------------------------------------------------------------------------
 | API Routes
