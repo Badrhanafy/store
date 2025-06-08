@@ -10,7 +10,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Carousel;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Laravel\Socialite\Facades\Socialite;
-
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
 /*
 |--------------------------------------------------------------------------
@@ -63,8 +64,9 @@ Route::post('/orders/panier', [OrderController::class, 'PanierOrder']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
-Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store']);
+Route::post('/reset-password', [NewPasswordController::class, 'store']);
+
           
 
 
@@ -81,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Notifications routes
     Route::middleware('auth:sanctum')->get('/admin/notifications', [NotificationController::class, 'index']);
-    Route::middleware('auth:sanctum')->post('/admin/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::middleware('auth:sanctum')->patch('/admin/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::middleware('auth:sanctum')->patch('/admin/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 
 

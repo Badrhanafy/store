@@ -39,3 +39,10 @@ Route::get('/auth/google/callback', function (Request $request) {
     // redirect back to frontend with token
     return redirect("http://localhost:3000/google/callback?token=$token");
 });
+
+
+
+////////// Password reset 
+
+Route::get('/oauth/google', [GoogleOAuthController::class, 'redirectToGoogle']);
+Route::get('/oauth/google/callback', [GoogleOAuthController::class, 'handleGoogleCallback']);
