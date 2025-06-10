@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\GoogleOAuthController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -22,23 +23,19 @@ Route::get('/reset-password/{token}', function ($token) {
     return redirect()->away("http://localhost:3000/reset-password?token=$token&email=$email");
 })->name('password.reset');
 ////////////////// auuuuuuuth googlr
-Route::get('/auth/google/redirect', function () {
-    return Socialite::driver('google')->redirect();
+Route::get('/', function () {
+    return view('welcome');
 });
 
-Route::get('/auth/google/callback', function (Request $request) {
-    $googleUser = Socialite::driver('google')->user();
+// Password reset (keep this as is)
+Route::get('/reset-password/{token}', function ($token) {
+    $email = request('email');
+    return redirect()->away("http://localhost:3000/reset-password?token=$token&email=$email");
+})->name('password.reset');
 
-    $user = \App\Models\User::firstOrCreate(
-        ['email' => $googleUser->getEmail()],
-        ['name' => $googleUser->getName()]
-    );
-
-    $token = $user->createToken('google-token')->plainTextToken;
-
-    // redirect back to frontend with token
-    return redirect("http://localhost:3000/google/callback?token=$token");
-});
+// Google OAuth using Socialite
+Route::get('/auth/google/redirect', [\App\Http\Controllers\Auth\GoogleOAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleOAuthController::class, 'handleGoogleCallback']);
 
 
 

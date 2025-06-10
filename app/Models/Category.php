@@ -1,21 +1,18 @@
 <?php
-// app/Models/Slide.php
+// app/Models/Category.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Slide extends Model
+class Category extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'title',
-        'subtitle',
-        'cta',
+        'name',
         'image',
         'link',
-        'bg_color',
         'order',
         'is_active'
     ];

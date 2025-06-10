@@ -13,6 +13,10 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\API\ImageController;
+
+use App\Http\Controllers\API\SlideController;
+use App\Http\Controllers\API\CategoryController;
 /* just for commits ! */
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +71,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store']);
 Route::post('/reset-password', [NewPasswordController::class, 'store']);
+Route::get('/reset-password/{token}/{email}', [NewPasswordController::class, 'store']);
 
           
 
@@ -120,5 +125,17 @@ Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])/* ->m
 Route::patch("/account/Update/{userId}",[AuthController::class,'profileUpdate']);
 
 //// sliders
-Route::get('/slides',[Carousel::class,'index']);
-Route::post('/slides',[Carousel::class,'store']);
+
+Route::apiResource('slides', SlideController::class)->only(['index', 'show']);
+Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+// Admin routes (protected by auth)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('slides', SlideController::class)->except(['index', 'show']);
+    Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
+    
+    // Additional admin-only endpoints
+    Route::post('slides/reorder', [SlideController::class, 'reorder']);
+    Route::post('categories/reorder', [CategoryController::class, 'reorder']);
+});
+ ///// image upload 
+ Route::post('upload-image', [ImageController::class, 'upload'])->middleware('auth:sanctum');
