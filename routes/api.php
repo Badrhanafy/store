@@ -139,3 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
  ///// image upload 
  Route::post('upload-image', [ImageController::class, 'upload'])->middleware('auth:sanctum');
+
+ //// new Arrivals
+
+ Route::get('/products/newArrivals', [ProductController::class, 'newArrivals']);

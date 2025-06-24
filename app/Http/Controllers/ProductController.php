@@ -8,9 +8,12 @@ use App\Models\ProductImage;
 use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
-    public function index() {
-        return Product::all();
-    }
+public function index()
+{
+    return Product::with('impressions')
+                 ->withAvg('impressions', 'rating') // هادي تحسب متوسط rating
+                 ->get();
+}
     
     public function addImages(Request $request, $productId)
     {
@@ -141,5 +144,36 @@ public function store(Request $request) {
             'message' => 'Error deleting image: ' . $e->getMessage()
         ], 500);
     }
+}
+/////////////////////////////////////  New Arrivals 
+public function newArrivals(Request $request)
+{
+    $products = Product::newArrivals()
+        ->select(['id', 'title', 'description', 'price', 'qte', 'category', 'sizes', 'colors', 'image', 'created_at'])
+        ->get();
+
+    $mappedProducts = $products->map(function ($product) {
+        return [
+            'id' => $product->id,
+            'title' => $product->title,
+            'description' => $product->description,
+            'price' => $product->price,
+            'quantity' => $product->qte,
+            'category' => $product->category,
+            'sizes' => $product->sizes,
+            'colors' => $product->colors,
+            'image' => $product->image ? asset('storage/' . $product->image) : null,
+            'created_at' => $product->created_at,
+            'is_new' => true
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $mappedProducts,
+        'message' => $products->isEmpty() 
+            ? 'No new arrivals found' 
+            : 'New arrivals retrieved successfully'
+    ]);
 }
 }

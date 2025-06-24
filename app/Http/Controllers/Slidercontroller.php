@@ -45,5 +45,5 @@ class SlideController extends Controller
         return response()->json($slide, 201);
     }
 
-    // Add other CRUD methods as needed
+    
 }
