@@ -6,11 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
-    public function index() {
-        return Product::all();
-    }
+public function index()
+{
+    return Product::with('impressions')
+                 ->withAvg('impressions', 'rating') // هادي تحسب متوسط rating
+                 ->get();
+}
     
     public function addImages(Request $request, $productId)
     {
@@ -142,4 +146,49 @@ public function store(Request $request) {
         ], 500);
     }
 }
+/////////////////////////////////////  New Arrivals 
+public function newArrivals(Request $request)
+{
+    $products = Product::withAvg('impressions', 'rating')
+        ->newArrivals()
+        ->get();
+
+    $mappedProducts = $products->map(function ($product) {
+        return [
+            'id' => $product->id,
+            'title' => $product->title,
+            'description' => $product->description,
+            'price' => $product->price,
+            'quantity' => $product->qte,
+            'category' => $product->category,
+            'sizes' => $product->sizes,
+            'colors' => $product->colors,
+            'image' => $product->image ? asset($product->image) : null,
+            'created_at' => $product->created_at,
+            'rating_avg' => $product->impressions_avg_rating,
+            'is_new' => true
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $mappedProducts,
+        'message' => $products->isEmpty() 
+            ? 'No new arrivals found' 
+            : 'New arrivals retrieved successfully'
+    ]);
+}
+
+
+
+public function topRatedProducts()
+{
+    $products = Product::withAvg('impressions', 'rating')
+                ->orderByDesc('impressions_avg_rating') // automatic alias from withAvg
+                ->take(4)
+                ->get();
+
+    return response()->json($products);
+}
+
 }
