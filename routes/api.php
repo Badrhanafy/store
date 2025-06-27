@@ -142,4 +142,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
  //// new Arrivals
 
- Route::get('/products/newArrivals', [ProductController::class, 'newArrivals']);
+ Route::get('/new-arrivals', [ProductController::class, 'newArrivals']);
+
+
+////// top rated products !1 
+Route::get('/top-rated-products', [ProductController::class, 'topRatedProducts']);
+
+
+
+Route::get('/test', function () {
+    return "test Arrivals !";
+});

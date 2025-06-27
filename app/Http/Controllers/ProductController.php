@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
 public function index()
@@ -148,8 +149,8 @@ public function store(Request $request) {
 /////////////////////////////////////  New Arrivals 
 public function newArrivals(Request $request)
 {
-    $products = Product::newArrivals()
-        ->select(['id', 'title', 'description', 'price', 'qte', 'category', 'sizes', 'colors', 'image', 'created_at'])
+    $products = Product::withAvg('impressions', 'rating')
+        ->newArrivals()
         ->get();
 
     $mappedProducts = $products->map(function ($product) {
@@ -162,8 +163,9 @@ public function newArrivals(Request $request)
             'category' => $product->category,
             'sizes' => $product->sizes,
             'colors' => $product->colors,
-            'image' => $product->image ? asset('storage/' . $product->image) : null,
+            'image' => $product->image ? asset($product->image) : null,
             'created_at' => $product->created_at,
+            'rating_avg' => $product->impressions_avg_rating,
             'is_new' => true
         ];
     });
@@ -176,4 +178,17 @@ public function newArrivals(Request $request)
             : 'New arrivals retrieved successfully'
     ]);
 }
+
+
+
+public function topRatedProducts()
+{
+    $products = Product::withAvg('impressions', 'rating')
+                ->orderByDesc('impressions_avg_rating') // automatic alias from withAvg
+                ->take(4)
+                ->get();
+
+    return response()->json($products);
+}
+
 }
