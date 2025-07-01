@@ -191,4 +191,13 @@ public function topRatedProducts()
     return response()->json($products);
 }
 
+public function deleteProduct($id){
+    $product = Product::findOrFail($id);
+    if($product){
+        $product->delete();
+    }
+    else{
+        return response()->json(['message'=>"Noproduct found with that id !"]);
+    }
+}
 }

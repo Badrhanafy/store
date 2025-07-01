@@ -41,7 +41,7 @@ Route::post('/admin/products/{product}/add-images', [ProductController::class, '
 Route::get('/products/{id}/images', [ProductController::class, 'getImages']);
 Route::get("/product/{id}/impressions",[ProductController::class,"GetImpressions"]);
 Route::delete('/products/{product}/images/{image}', [ProductController::class, 'deleteImage']);
-
+Route::delete("/productDelete/{id}",[ProductController::class, 'deleteProduct']);
 //Auth Part
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
